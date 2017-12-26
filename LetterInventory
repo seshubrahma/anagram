@@ -1,0 +1,106 @@
+
+
+// A class that represents a collection of letters from the English alphabet. 
+public class LetterInventory {
+
+	private static final int NUM_LETTERS = 26;
+	private static final int ASCII_A = 97;
+	private int[] alphabet;
+	private int size;
+
+	// constructor that takes in string
+	// pre: s must not be null
+	public LetterInventory(String s) {
+		if(s == null)
+			throw new IllegalArgumentException("String must not be null");
+
+		alphabet = new int[NUM_LETTERS];
+		s = s.toLowerCase();
+		for(int i = 0; i < s.length(); i++) {
+			if('a' <= s.charAt(i) && s.charAt(i) <= 'z') {
+				alphabet[s.charAt(i) - ASCII_A]++;
+				size++;
+			}
+		}
+	}
+
+	// gets the frequency of the given character in this LetterInventory
+	// pre: ch must be an english character
+	public int get(char ch) {
+		ch = Character.toLowerCase(ch);
+		
+		if(!('a' <= ch && ch <= 'z'))
+			throw new IllegalArgumentException("character must be an English letter");
+		
+		return alphabet[ch - ASCII_A];
+	}
+
+	// returns the total number of letters in this LetterInventory
+	public int size() {
+		return size;
+	}
+
+	// returns true if the size of this LetterInventory is 0
+	public boolean isEmpty() {
+		return size == 0;
+	}
+
+	// returns a String representation of this LetterInventory in alphabetical order
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		for(int character = 0; character < alphabet.length; character++) {
+			for(int count = 0; count < alphabet[character]; count++)
+				result.append((char) (character + ASCII_A));
+		}
+		return result.toString();
+	}
+
+	// helper method to reduce redundancies in add and subtract methods
+	// returns new LetterInventory object that either adds or subtracts this LetterInventory and 
+	// another LetterInventory object
+	private LetterInventory combineLetterInventories(LetterInventory other, int change) {
+		if(other == null)
+			throw new IllegalArgumentException("LetterInventory object cannot be null");
+
+		LetterInventory result = new LetterInventory("");
+		for(int i = 0; i < NUM_LETTERS; i++) {
+			result.alphabet[i] = this.alphabet[i] + (change*other.alphabet[i]);
+			if(result.alphabet[i] < 0) {
+				return null;
+			}
+			result.size += result.alphabet[i];
+		}
+		return result;
+	}
+
+	// pre: the LetterInventory sent as an explicit parameter is not be null
+	// post: neither the calling object or the explicit parameter are altered as a result of this method call
+	// returns a new LetterInventory object created by adding the letter frequencies 
+	// from the explicit parameter from the calling object's letter frequencies
+	public LetterInventory add(LetterInventory other) {
+		return combineLetterInventories(other, 1);
+	}
+
+	// pre: the LetterInventory sent as an explicit parameter is not be null
+	// post: neither the calling object or the explicit parameter are altered as a result of this method call
+	// returns a new LetterInventory object created by subtracting the letter frequencies 
+	// from the explicit parameter from the calling object's letter frequencies
+	public LetterInventory subtract(LetterInventory other) {
+		return combineLetterInventories(other, -1);
+	}
+
+	@Override
+	// two LetterInventorys are equal if the frequency for each letter in the alphabet is the same
+	public boolean equals(Object other) {
+		if(!(other instanceof LetterInventory)) {
+			return false;
+		}
+		LetterInventory li = (LetterInventory) other;
+		for(int i = 0; i < NUM_LETTERS; i++) {
+			if(li.alphabet[i] != this.alphabet[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+}

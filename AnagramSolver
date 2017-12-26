@@ -1,0 +1,100 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+
+// A class that solves and returns a list of anagrams 
+// for a given phrase and maximum number of words. 
+public class AnagramSolver {
+
+	private List<String> dictionary;
+	private HashMap<String, LetterInventory> map;
+
+	// constructor that instantiates a dictionary arrayList and a hashmap with (word, letterInventory object) pairs
+	public AnagramSolver(List<String> l)
+	{
+		dictionary = new ArrayList<String>();
+		map = new HashMap<String, LetterInventory>();
+		for(int i = 0; i < l.size(); i++) {
+			dictionary.add(l.get(i));
+			map.put(l.get(i), new LetterInventory(l.get(i)));
+		}
+	}
+
+	// pre: String not be null and the String contain at least one English letter. The int parameter must be greater than or equal to 0.
+	// returns a list of list of strings that contains all anagrams of given phrase
+	public List<List<String>> getAnagrams(String phrase, int max) {
+		
+		LetterInventory letters = new LetterInventory(phrase);
+		
+		if(phrase == null || letters.isEmpty() || max < 0) // if letters is empty, that means there are no frequencies of english letters in its array
+			throw new IllegalArgumentException("String may not be null, String must contain at least one English letter. "
+					+ "aThe int parameter must be greater than or equal to 0.");
+
+		ArrayList<List<String>> result = new ArrayList<List<String>>();
+
+		ArrayList<String> smallDictionary = new ArrayList<String>();
+		HashMap<String, LetterInventory> smallMap = new HashMap<String, LetterInventory>();
+
+		// update dictionary to only words that will work
+		for (String word : map.keySet()) {
+			LetterInventory temp = map.get(word);
+			if(letters.subtract(temp) != null) {
+				smallDictionary.add(word);
+				smallMap.put(word, temp);
+			}
+		}
+		Collections.sort(smallDictionary);
+		buildAnagrams(letters, result, max, smallDictionary, smallMap, new ArrayList<String>(), 0);
+		Collections.sort(result, new AnagramComparator());
+		return result;
+	}
+
+	// helper method for getAnagrams where the recursion happens
+	// adds anagrams to list of list of strings when found
+	private void buildAnagrams(LetterInventory letters, ArrayList<List<String>> result, int max, ArrayList<String> smallDictionary,
+			HashMap<String, LetterInventory> smallMap, ArrayList<String> anagram, int index) {
+		
+		// base case: if letters = 0, add to anagrams
+		if(letters.isEmpty() && (max == 0 || anagram.size() <= max)) {
+			ArrayList<String> anagramCopy = new ArrayList<String>();
+			for(int i = 0; i < anagram.size(); i++) {
+				anagramCopy.add(anagram.get(i));
+			}
+			result.add(anagramCopy);
+		} else {
+			if(anagram.size() < max || max == 0) {  // regardless of letter inventory, don't go on if words >= max given
+				for(int i = index; i < smallDictionary.size(); i++) {
+					String s = smallDictionary.get(i);
+					LetterInventory temp = letters.subtract(smallMap.get(s));  // see if s can be in the anagram
+					if(temp != null) {
+						anagram.add(s);
+						buildAnagrams(temp, result, max, smallDictionary, smallMap, anagram, i); // recursive step
+						anagram.remove(anagram.size() - 1);
+					}
+				}
+			}
+		}
+	}
+
+	// class to compare two lists of anagrams
+	private static class AnagramComparator implements Comparator<List<String>> {
+		
+		// returns int to see which anagram comes first
+		public int compare(List<String> a1, List<String> a2) {
+			//if not same size
+			if(a1.size() != a2.size()) {
+				return a1.size() - a2.size();
+			}
+			// if same size
+			for(int i = 0; i < a1.size(); i++) {
+				if(!a1.get(i).equals(a2.get(i))) { //compare each word
+					return a1.get(i).compareTo(a2.get(i));
+				}
+			}
+			// if all same words
+			return 0;
+		}
+	}
+}
